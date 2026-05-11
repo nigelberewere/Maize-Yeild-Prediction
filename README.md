@@ -8,10 +8,13 @@ This repository contains a computational modelling mini project to predict maize
 
 ## Project Structure
 
+- `app.py` - Flask web application (run with `python app.py`)
+- `templates/`
+  - `index.html` - Modern responsive web interface
 - `data/`
   - `raw/` - Raw input datasets
   - `processed/` - Cleaned and processed datasets
-  - `zimbabwe_maize_yield.csv` - Sample synthetic dataset (30 records)
+  - `zimbabwe_maize_yield.csv` - Sample synthetic dataset (46 records)
 - `notebooks/`
   - `maize_yield_analysis.ipynb` - Notebook for exploration and visualisation
 - `src/`
@@ -24,8 +27,10 @@ This repository contains a computational modelling mini project to predict maize
 - `reports/`
   - `graphs/` - Generated figures
   - `project_report.md` - Project report template
+- `tests/` - Unit and integration tests
 - `requirements.txt` - Python dependencies
 - `README.md` - This file
+- `WEB_UI.md` - Web interface documentation
 
 ## Datasets and sources
 Suggested real data sources for a full study:
@@ -53,39 +58,74 @@ Note: The included `zimbabwe_maize_yield.csv` is synthetic sample data to bootst
 - R² (Coefficient of determination)
 
 ## How to run (local)
-1. Create a Python environment (recommended):
 
+### Setup (One-time)
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-2. Preprocess data:
+### Option 1: Web Interface (Recommended) 🌐
+
+Run the modern web application with an easy-to-use interface:
 
 ```powershell
-python src/data_preprocessing.py
+python app.py
 ```
 
-3. Train models:
+Then open your browser to: **http://127.0.0.1:5000**
 
-```powershell
-python src/train_model.py
-```
+✨ Features:
+- Beautiful responsive design (works on mobile)
+- Real-time prediction results
+- Input validation with helpful hints
+- No command-line knowledge required
 
-4. Predict with the saved model (example):
+### Option 2: Interactive CLI 💬
 
-```powershell
-python src/predict.py --rainfall 650 --temp 24 --fert 120 --area 1000000
-```
-
-Or run it in interactive mode and answer the prompts step by step:
+Answer prompts step by step with helpful defaults:
 
 ```powershell
 python src/predict.py --interactive
 ```
 
-5. Evaluate or rerun notebook for analysis: open `notebooks/maize_yield_analysis.ipynb`.
+You'll be prompted for:
+- Annual rainfall (mm) — _Press Enter for default: 700_
+- Average temperature (°C) — _Press Enter for default: 22_
+- Fertilizer use (kg/ha) — _Press Enter for default: 80_
+- Area harvested (hectares) — _Press Enter for default: 380000_
+
+### Option 3: Command-line Flags 🚀
+
+Quick prediction with explicit values:
+
+```powershell
+python src/predict.py --rainfall 650 --temp 24 --fert 120 --area 1000000
+```
+
+### Data Preprocessing & Model Training
+
+To rebuild the model from scratch:
+
+```powershell
+# Preprocess data
+python src/data_preprocessing.py
+
+# Train Linear Regression and Random Forest models
+python src/train_model.py
+
+# Evaluate model performance
+python src/evaluate_model.py
+```
+
+### Jupyter Notebook Analysis
+
+For exploratory data analysis and visualization:
+
+```powershell
+jupyter notebook notebooks/maize_yield_analysis.ipynb
+```
 
 ## Expected output
 - Trained model saved to `models/maize_yield_model.pkl`.
