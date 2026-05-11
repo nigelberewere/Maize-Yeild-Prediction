@@ -5,7 +5,10 @@ import argparse
 import numpy as np
 
 
-def load_model(path=os.path.join('..', 'models', 'maize_yield_model.pkl')):
+def load_model(path=None):
+    if path is None:
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(project_root, 'models', 'maize_yield_model.pkl')
     return joblib.load(path)
 
 

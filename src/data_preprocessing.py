@@ -31,7 +31,11 @@ def save_processed(df: pd.DataFrame, out_dir: str = '../data/processed') -> str:
 
 
 if __name__ == '__main__':
-    df = load_data(os.path.join('..', 'data', 'zimbabwe_maize_yield.csv'))
+    # Get the parent directory (project root)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_path = os.path.join(project_root, 'data', 'zimbabwe_maize_yield.csv')
+    out_dir = os.path.join(project_root, 'data', 'processed')
+    df = load_data(data_path)
     df = basic_clean(df)
-    p = save_processed(df, out_dir=os.path.join('..', 'data', 'processed'))
+    p = save_processed(df, out_dir=out_dir)
     print(f"Processed data saved to {p}")

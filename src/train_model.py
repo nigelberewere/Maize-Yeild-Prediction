@@ -39,7 +39,7 @@ def train_models(df, target='Yield_kg_per_ha'):
     return models, results, X_test, y_test
 
 
-def save_best_model(models, results, out_path='..\models\maize_yield_model.pkl'):
+def save_best_model(models, results, out_path=os.path.join('..', 'models', 'maize_yield_model.pkl')):
     # choose best by RMSE
     best = min(results.items(), key=lambda kv: kv[1]['rmse'])[0]
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -60,13 +60,20 @@ def plot_actual_vs_pred(y_test, preds, out_file):
 
 
 if __name__ == '__main__':
-    df = load_data(os.path.join('..', 'data', 'processed', 'zimbabwe_maize_yield_processed.csv'))
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    processed_path = os.path.join(project_root, 'data', 'processed', 'zimbabwe_maize_yield_processed.csv')
+    if not os.path.exists(processed_path):
+        # fall back to raw if processed not present
+        processed_path = os.path.join(project_root, 'data', 'zimbabwe_maize_yield.csv')
+    df = load_data(processed_path)
     models, results, X_test, y_test = train_models(df)
-    best_name, model_path = save_best_model(models, results, out_path=os.path.join('..', 'models', 'maize_yield_model.pkl'))
+    model_out = os.path.join(project_root, 'models', 'maize_yield_model.pkl')
+    best_name, model_path = save_best_model(models, results, out_path=model_out)
     print('Training results:')
     for k, v in results.items():
         print(f"{k}: RMSE={v['rmse']:.2f}, MAE={v['mae']:.2f}, R2={v['r2']:.3f}")
     print(f"Best model: {best_name} saved to {model_path}")
     # save plot
-    os.makedirs(os.path.join('..', 'reports', 'graphs'), exist_ok=True)
-    plot_actual_vs_pred(y_test, results[best_name]['preds'], os.path.join('..', 'reports', 'graphs', 'actual_vs_predicted.png'))
+    graph_dir = os.path.join(project_root, 'reports', 'graphs')
+    os.makedirs(graph_dir, exist_ok=True)
+    plot_actual_vs_pred(y_test, results[best_name]['preds'], os.path.join(graph_dir, 'actual_vs_predicted.png'))

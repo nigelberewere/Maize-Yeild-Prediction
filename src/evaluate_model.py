@@ -38,10 +38,12 @@ def plot_actual_vs_pred(y, preds, out_file):
 
 
 if __name__ == '__main__':
-    model_path = os.path.join('..', 'models', 'maize_yield_model.pkl')
-    processed = os.path.join('..', 'data', 'processed', 'zimbabwe_maize_yield_processed.csv')
-    os.makedirs(os.path.join('..', 'reports', 'graphs'), exist_ok=True)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    model_path = os.path.join(project_root, 'models', 'maize_yield_model.pkl')
+    processed = os.path.join(project_root, 'data', 'processed', 'zimbabwe_maize_yield_processed.csv')
+    graph_dir = os.path.join(project_root, 'reports', 'graphs')
+    os.makedirs(graph_dir, exist_ok=True)
     metrics, y, preds = evaluate(model_path, processed)
     print('Evaluation metrics:')
     print(metrics)
-    plot_actual_vs_pred(y, preds, os.path.join('..', 'reports', 'graphs', 'actual_vs_predicted_full.png'))
+    plot_actual_vs_pred(y, preds, os.path.join(graph_dir, 'actual_vs_predicted_full.png'))
