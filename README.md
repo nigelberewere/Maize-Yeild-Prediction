@@ -79,6 +79,12 @@ python src/train_model.py
 python src/predict.py --rainfall 650 --temp 24 --fert 120 --area 1000000
 ```
 
+Or run it in interactive mode and answer the prompts step by step:
+
+```powershell
+python src/predict.py --interactive
+```
+
 5. Evaluate or rerun notebook for analysis: open `notebooks/maize_yield_analysis.ipynb`.
 
 ## Expected output
