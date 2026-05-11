@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maize Yield Prediction - Zimbabwe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #2d5016;
+            --accent-gold: #d4a574;
+            --light-bg: #f8f9fa;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(90deg, var(--primary-green) 0%, #3d6b1f 100%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .container-main {
+            max-width: 900px;
+            margin-top: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .card-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .card-header-custom {
+            background: linear-gradient(135deg, var(--primary-green) 0%, #3d6b1f 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .card-header-custom h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-header-custom p {
+            font-size: 1rem;
+            opacity: 0.95;
+            margin: 0;
+        }
+        
+        .form-section {
+            padding: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.8rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-green);
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+        }
+        
+        .input-helper {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+        
+        .btn-predict {
+            background: linear-gradient(135deg, var(--primary-green) 0%, #3d6b1f 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 80, 22, 0.3);
+            color: white;
+        }
+        
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+        
+        .btn-reset {
+            background: #e0e0e0;
+            border: none;
+            color: #333;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        
+        .btn-reset:hover {
+            background: #d0d0d0;
+            color: #333;
+        }
+        
+        .result-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #f5f7fa 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            border-left: 5px solid var(--primary-green);
+            display: none;
+        }
+        
+        .result-section.show {
+            display: block;
+            animation: slideIn 0.4s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-item {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: white;
+            margin-bottom: 1rem;
+        }
+        
+        .result-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+        
+        .result-unit {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 0.3rem;
+        }
+        
+        .error-section {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 1.5rem;
+            border-radius: 6px;
+            color: #856404;
+            display: none;
+        }
+        
+        .error-section.show {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner-border {
+            color: var(--primary-green);
+        }
+        
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid var(--primary-green);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        
+        .info-box strong {
+            color: var(--primary-green);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .footer a {
+            color: var(--primary-green);
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .card-header-custom h1 {
+                font-size: 1.5rem;
+            }
+            
+            .result-value {
+                font-size: 1.5rem;
+            }
+            
+            .container-main {
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">🌾 Maize Yield Predictor</span>
+            <small style="color: rgba(255, 255, 255, 0.7);">Zimbabwe Agricultural Model</small>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container container-main">
+        <div class="card-container">
+            <!-- Header -->
+            <div class="card-header-custom">
+                <h1>Maize Yield Prediction</h1>
+                <p>Estimate your maize harvest yield based on climate and agricultural inputs</p>
+            </div>
+
+            <!-- Info Box -->
+            <div style="padding: 2rem; padding-bottom: 0">
+                <div class="info-box">
+                    <strong>💡 How it works:</strong> Enter your annual rainfall, average temperature, fertilizer application rate, and harvested area. Our AI model will predict your expected yield in kg/ha and total production in tonnes.
+                </div>
+            </div>
+
+            <!-- Form Section -->
+            <div class="form-section">
+                <form id="predictionForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="rainfall" class="form-label">Annual Rainfall (mm)</label>
+                                <input type="number" class="form-control" id="rainfall" placeholder="e.g., 700" 
+                                       value="700" min="0" max="2000" step="10" required>
+                                <div class="input-helper">Zimbabwe average: 694-850 mm</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="temperature" class="form-label">Average Temperature (°C)</label>
+                                <input type="number" class="form-control" id="temperature" placeholder="e.g., 22" 
+                                       value="22" min="10" max="35" step="0.1" required>
+                                <div class="input-helper">Zimbabwe average: 20-24°C</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fertilizer" class="form-label">Fertilizer Use (kg/ha)</label>
+                                <input type="number" class="form-control" id="fertilizer" placeholder="e.g., 80" 
+                                       value="80" min="0" max="500" step="5" required>
+                                <div class="input-helper">Zimbabwe typical: 30-120 kg/ha</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="area" class="form-label">Area Harvested (hectares)</label>
+                                <input type="number" class="form-control" id="area" placeholder="e.g., 380000" 
+                                       value="380000" min="1" max="10000000" step="1000" required>
+                                <div class="input-helper">National average: 350k-420k ha</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <button type="submit" class="btn btn-predict" id="predictBtn">
+                        🔍 Predict Yield
+                    </button>
+                    <button type="reset" class="btn btn-reset" id="resetBtn">Clear</button>
+                </form>
+
+                <!-- Loading Indicator -->
+                <div class="loading" id="loading">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--primary-green);">Calculating prediction...</p>
+                </div>
+
+                <!-- Error Message -->
+                <div class="error-section" id="errorSection">
+                    <strong>⚠️ Error:</strong> <span id="errorMessage"></span>
+                </div>
+
+                <!-- Results Section -->
+                <div class="result-section" id="resultSection">
+                    <h4 style="color: var(--primary-green); margin-bottom: 1.5rem; font-weight: 700;">📊 Prediction Results</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="result-item">
+                                <div class="result-label">Expected Yield</div>
+                                <div class="result-value" id="yieldResult">—</div>
+                                <div class="result-unit">kg per hectare</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="result-item">
+                                <div class="result-label">Total Production</div>
+                                <div class="result-value" id="productionResult">—</div>
+                                <div class="result-unit">tonnes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>🌍 AI-Based Maize Yield Prediction Model for Zimbabwe Farmers</p>
+            <p>
+                <a href="https://github.com/nigelberewere/Maize-Yeild-Prediction" target="_blank">📖 View on GitHub</a> | 
+                <a href="#" onclick="showInfo(); return false;">ℹ️ About This Model</a>
+            </p>
+            <p style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.7;">Built with Python ML, trained on Zimbabwe agricultural data</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const form = document.getElementById('predictionForm');
+        const loading = document.getElementById('loading');
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultSection = document.getElementById('resultSection');
+        const yieldResult = document.getElementById('yieldResult');
+        const productionResult = document.getElementById('productionResult');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const rainfall = parseFloat(document.getElementById('rainfall').value);
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const fertilizer = parseFloat(document.getElementById('fertilizer').value);
+            const area = parseFloat(document.getElementById('area').value);
+
+            // Show loading
+            loading.style.display = 'block';
+            errorSection.classList.remove('show');
+            resultSection.classList.remove('show');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        rainfall: rainfall,
+                        temperature: temperature,
+                        fertilizer: fertilizer,
+                        area: area
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    yieldResult.textContent = data.yield_kg_per_ha.toLocaleString();
+                    productionResult.textContent = data.production_tonnes.toLocaleString();
+                    resultSection.classList.add('show');
+                } else {
+                    errorMessage.textContent = data.error || 'An error occurred. Please try again.';
+                    errorSection.classList.add('show');
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Failed to connect to the server. Please try again.';
+                errorSection.classList.add('show');
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        function showInfo() {
+            alert('Maize Yield Prediction Model\n\n' +
+                  'This model uses Linear Regression trained on historical Zimbabwe maize yield data, ' +
+                  'incorporating rainfall, temperature, fertilizer use, and harvested area as predictors.\n\n' +
+                  'Data sources: NASA POWER (rainfall), World Bank (fertilizer), FAOSTAT (production).\n\n' +
+                  'Created as a computational modeling project for agricultural forecasting in Zimbabwe.');
+        }
+    </script>
+</body>
+</html>
