@@ -4,11 +4,11 @@ Prefers the Open-Meteo temperature files from `Datasets/` and falls back to
 the NASA POWER multi-point series if the Open-Meteo output is unavailable.
 """
 import os
-import sys
 import pandas as pd
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REALVARS_PATH = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_maize_yield_realvars.csv')
+REALVARS_FIXED_PATH = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_maize_yield_realvars_fixed.csv')
 OUTPUT_PATH = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_maize_yield_realvars_temp.csv')
 OPEN_METEO_MONTHLY_PATH = os.path.join(PROJECT_ROOT, 'Datasets', 'zimbabwe_temperature_monthly_actual_1981_2025.csv')
 NASA_POWER_PATH = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_temperature_nasa_power.csv')
@@ -34,7 +34,10 @@ def load_actual_temperature() -> pd.DataFrame:
 
 
 def main() -> None:
-    df = pd.read_csv(REALVARS_PATH)
+    source_path = REALVARS_PATH
+    if not os.path.exists(source_path) and os.path.exists(REALVARS_FIXED_PATH):
+        source_path = REALVARS_FIXED_PATH
+    df = pd.read_csv(source_path)
     temp_df = load_actual_temperature()
     merged = df.drop(columns=['Average_Temperature_C'], errors='ignore').merge(temp_df, on='Year', how='left')
     # preserve the original column order
@@ -42,6 +45,7 @@ def main() -> None:
     merged = merged[desired]
     merged.to_csv(OUTPUT_PATH, index=False)
     print(f'Saved merged dataset to {OUTPUT_PATH}')
+    print(f'Base agriculture dataset: {source_path}')
     print(f'Rows: {len(merged)}')
     print(merged.head())
 

@@ -10,8 +10,12 @@ import pandas as pd
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 datasets_dir = os.path.join(project_root, 'Datasets')
 wb_file = os.path.join(datasets_dir, 'agriculture-and-rural-development_zwe.csv')
-input_file = os.path.join(project_root, 'data', 'zimbabwe_maize_yield.csv')
+input_file = os.path.join(project_root, 'data', 'zimbabwe_maize_yield_hybrid.csv')
+if not os.path.exists(input_file):
+    input_file = os.path.join(project_root, 'data', 'zimbabwe_maize_yield.csv')
 output_file = os.path.join(project_root, 'data', 'zimbabwe_maize_yield_realvars.csv')
+fallback_output_file = os.path.join(project_root, 'data', 'zimbabwe_maize_yield_realvars_fixed.csv')
+openmeteo_rainfall_file = os.path.join(project_root, 'data', 'zimbabwe_rainfall_openmeteo_annual.csv')
 
 print("Loading World Bank agriculture dataset...")
 df = pd.read_csv(wb_file)
@@ -32,8 +36,7 @@ mapping = {
     'Fertilizer consumption (kilograms per hectare of arable land)': 'Fertilizer_kg_per_ha',
     'Cereal yield (kg per hectare)': 'Yield_kg_per_ha',
     'Land under cereal production (hectares)': 'Area_Harvested_Ha',
-    'Cereal production (metric tons)': 'Maize_Production_Tonnes',
-    'Average precipitation in depth (mm per year)': 'Rainfall_mm'
+    'Cereal production (metric tons)': 'Maize_Production_Tonnes'
 }
 
 # For each year, replace if real value exists
@@ -55,8 +58,26 @@ print('\nReplaced counts per column:')
 for k,v in replaced_counts.items():
     print(f'  - {k}: {v}')
 
+print("\nRainfall is preserved from the base rainfall dataset (not overwritten by World Bank precipitation).")
+
+# Optional: replace rainfall with Open-Meteo annual rainfall if available
+if os.path.exists(openmeteo_rainfall_file):
+    rain_df = pd.read_csv(openmeteo_rainfall_file)
+    rain_df = rain_df[['Year', 'Rainfall_mm']]
+    h = h.drop(columns=['Rainfall_mm'], errors='ignore').merge(rain_df, on='Year', how='left')
+    print(f"Open-Meteo rainfall merged from {openmeteo_rainfall_file}")
+else:
+    print(f"Open-Meteo rainfall file not found at {openmeteo_rainfall_file}; using base rainfall values.")
+
 # Save
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
-h.to_csv(output_file, index=False)
-print(f"\nSaved merged dataset to: {output_file}")
+saved_path = output_file
+try:
+    h.to_csv(output_file, index=False)
+except PermissionError:
+    saved_path = fallback_output_file
+    h.to_csv(saved_path, index=False)
+    print(f"\nPrimary output was locked; wrote to fallback: {saved_path}")
+
+print(f"\nSaved merged dataset to: {saved_path}")
 print(f"Shape: {h.shape}")
