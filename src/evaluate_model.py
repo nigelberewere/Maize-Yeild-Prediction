@@ -8,6 +8,10 @@ import seaborn as sns
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 
+FEATURES = ['Rainfall_mm', 'Average_Temperature_C', 'Fertilizer_kg_per_ha', 'Area_Harvested_Ha']
+TARGET = 'Yield_kg_per_ha'
+
+
 def load_data(path):
     return pd.read_csv(path)
 
@@ -15,10 +19,13 @@ def load_data(path):
 def evaluate(model_path, processed_csv_path):
     model = joblib.load(model_path)
     df = load_data(processed_csv_path)
-    features = ['Rainfall_mm', 'Average_Temperature_C', 'Fertilizer_kg_per_ha', 'Area_Harvested_Ha']
-    X = df[features]
-    y = df['Yield_kg_per_ha']
-    preds = model.predict(X)
+    df.columns = [column.strip() for column in df.columns]
+    for column in FEATURES + [TARGET]:
+        df[column] = pd.to_numeric(df[column], errors='coerce')
+    df = df.dropna(subset=FEATURES + [TARGET])
+    X = df[FEATURES]
+    y = df[TARGET]
+    preds = np.maximum(0.0, model.predict(X))
     rmse = np.sqrt(mean_squared_error(y, preds))
     mae = mean_absolute_error(y, preds)
     r2 = r2_score(y, preds)
@@ -40,7 +47,14 @@ def plot_actual_vs_pred(y, preds, out_file):
 if __name__ == '__main__':
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     model_path = os.path.join(project_root, 'models', 'maize_yield_model.pkl')
-    processed = os.path.join(project_root, 'data', 'processed', 'zimbabwe_maize_yield_processed.csv')
+    candidates = [
+        os.path.join(project_root, 'data', 'zimbabwe_maize_yield_realvars_temp.csv'),
+        os.path.join(project_root, 'data', 'zimbabwe_maize_yield_realvars.csv'),
+        os.path.join(project_root, 'data', 'processed', 'zimbabwe_maize_yield_processed.csv'),
+    ]
+    processed = next((path for path in candidates if os.path.exists(path)), None)
+    if processed is None:
+        raise FileNotFoundError('No evaluation dataset found.')
     graph_dir = os.path.join(project_root, 'reports', 'graphs')
     os.makedirs(graph_dir, exist_ok=True)
     metrics, y, preds = evaluate(model_path, processed)

@@ -3,7 +3,10 @@ import argparse
 import os
 
 import joblib
-import numpy as np
+import pandas as pd
+
+
+FEATURES = ['Rainfall_mm', 'Average_Temperature_C', 'Fertilizer_kg_per_ha', 'Area_Harvested_Ha']
 
 
 def load_model(path=None):
@@ -14,9 +17,14 @@ def load_model(path=None):
 
 
 def predict(model, rainfall, temp, fert, area):
-    X = np.array([[rainfall, temp, fert, area]])
+    X = pd.DataFrame([{
+        'Rainfall_mm': rainfall,
+        'Average_Temperature_C': temp,
+        'Fertilizer_kg_per_ha': fert,
+        'Area_Harvested_Ha': area,
+    }], columns=FEATURES)
     pred = model.predict(X)
-    return float(pred[0])
+    return max(0.0, float(pred[0]))
 
 
 def prompt_float(label, default=None):

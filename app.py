@@ -1,7 +1,7 @@
 """Flask web app for maize yield prediction."""
 import os
 import joblib
-import numpy as np
+import pandas as pd
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
@@ -9,6 +9,7 @@ app = Flask(__name__)
 # Load model at startup
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(PROJECT_ROOT, 'models', 'maize_yield_model.pkl')
+FEATURES = ['Rainfall_mm', 'Average_Temperature_C', 'Fertilizer_kg_per_ha', 'Area_Harvested_Ha']
 model = joblib.load(MODEL_PATH)
 
 
@@ -41,9 +42,13 @@ def predict():
         fertilizer = float(data.get('fertilizer', 80))
         area = float(data.get('area', 380000))
 
-        # Predict
-        X = np.array([[rainfall, temperature, fertilizer, area]])
-        yield_kg_per_ha = float(model.predict(X)[0])
+        X = pd.DataFrame([{
+            'Rainfall_mm': rainfall,
+            'Average_Temperature_C': temperature,
+            'Fertilizer_kg_per_ha': fertilizer,
+            'Area_Harvested_Ha': area,
+        }], columns=FEATURES)
+        yield_kg_per_ha = max(0.0, float(model.predict(X)[0]))
         production_tonnes = (yield_kg_per_ha * area) / 1000
 
         return jsonify({

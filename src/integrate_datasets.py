@@ -14,8 +14,8 @@ def load_rainfall_data(filepath):
     df['date'] = pd.to_datetime(df['date'])
     df['year'] = df['date'].dt.year
     
-    # Aggregate rainfall by year (sum annual rainfall)
-    yearly_rainfall = df.groupby('year')['rfh_avg'].mean().reset_index()
+    # Aggregate rainfall by year (sum annual rainfall - rainfall is cumulative, not averaged)
+    yearly_rainfall = df.groupby('year')['rfh_avg'].sum().reset_index()
     yearly_rainfall.rename(columns={'rfh_avg': 'Rainfall_mm'}, inplace=True)
     return yearly_rainfall
 
@@ -192,7 +192,7 @@ if __name__ == '__main__':
     
     # Load fertilizer data
     print("\n2. Loading fertilizer data...")
-    fert_path = os.path.join(datasets_dir, 'agriculture-and-rural-development_zwe_ fertiliser.csv')
+    fert_path = os.path.join(datasets_dir, 'agriculture-and-rural-development_zwe.csv')
     fertilizer_df = load_fertilizer_data(fert_path)
     print(f"   ✓ Fertilizer data: {fertilizer_df.shape}")
     
