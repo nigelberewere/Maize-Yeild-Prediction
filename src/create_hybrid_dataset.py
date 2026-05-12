@@ -59,6 +59,9 @@ def create_hybrid_dataset(rainfall_csv, output_path):
     final_cols = ['Year', 'Rainfall_mm', 'Average_Temperature_C', 'Fertilizer_kg_per_ha', 'Area_Harvested_Ha', 'Maize_Production_Tonnes', 'Yield_kg_per_ha']
     result = yearly_rainfall[final_cols].sort_values('Year').reset_index(drop=True)
     
+    # Remove incomplete/future years (2026 is only partially complete in May 2026)
+    result = result[result['Year'] < 2026].reset_index(drop=True)
+    
     # Save
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     result.to_csv(output_path, index=False)
