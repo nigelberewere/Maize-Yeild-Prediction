@@ -1,6 +1,12 @@
-"""Merge NASA POWER temperature into the real-variables Zimbabwe dataset."""
+"""Merge multi-point NASA POWER temperature into the real-variables Zimbabwe dataset."""
 import os
+import sys
 import pandas as pd
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
+
 from fetch_temperature import fetch_monthly_temperature
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

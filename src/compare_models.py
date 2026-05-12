@@ -16,7 +16,9 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 hybrid_path = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_maize_yield_hybrid.csv')
 if not os.path.exists(hybrid_path):
     hybrid_path = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_maize_yield.csv')
-real_path = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_maize_yield_realvars.csv')
+real_path = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_maize_yield_realvars_temp.csv')
+if not os.path.exists(real_path):
+    real_path = os.path.join(PROJECT_ROOT, 'data', 'zimbabwe_maize_yield_realvars.csv')
 models_dir = os.path.join(PROJECT_ROOT, 'models')
 reports_dir = os.path.join(PROJECT_ROOT, 'reports')
 
@@ -42,13 +44,13 @@ def train_and_eval(path):
         results[name] = {'rmse': float(rmse), 'mae': float(mae), 'r2': float(r2)}
     return results, lr, rf
 
-# Hybrid (current main CSV)
-print('Training on hybrid dataset (data/zimbabwe_maize_yield.csv)...')
+# Hybrid (explicit regenerated file when available)
+print(f'Training on hybrid dataset ({hybrid_path})...')
 hybrid_results, hybrid_lr, hybrid_rf = train_and_eval(hybrid_path)
 joblib.dump(hybrid_rf, os.path.join(models_dir, 'model_hybrid.pkl'))
 
 # Real variables
-print('Training on real-variables dataset (data/zimbabwe_maize_yield_realvars.csv)...')
+print(f'Training on real-variables dataset ({real_path})...')
 real_results, real_lr, real_rf = train_and_eval(real_path)
 joblib.dump(real_rf, os.path.join(models_dir, 'model_real.pkl'))
 
