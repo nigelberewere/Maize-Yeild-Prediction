@@ -6,19 +6,26 @@
 
 **1. NASA POWER Rainfall Data**
 - Source: `Datasets/zwe-rainfall-subnat-full.csv` (if available)
-- Content: 46 years of daily rainfall aggregated to annual totals (1981-2026)
+- Content: yearly rainfall series for Zimbabwe used in the original hybrid pipeline
 - Used by: `src/create_hybrid_dataset.py`
 - Size: ~50 KB
-- **Status:** Real data, essential for model
+- **Status:** Real data, still useful as a rainfall baseline
 
-**2. World Bank Fertilizer Data**
-- Source: `Datasets/agriculture-and-rural-development_zwe_fertiliser.csv` (if available)
-- Content: 63 years of fertilizer consumption data for Zimbabwe
-- Used by: `src/integrate_datasets.py` (attempted merge)
+**2. World Bank Agriculture Indicators**
+- Source: `Datasets/agriculture-and-rural-development_zwe.csv`
+- Content: fertilizer consumption, cereal yield, cereal production, and land under cereal production
+- Used by: `src/merge_real_agriculture.py`
 - Size: ~100 KB
-- **Status:** Real data, useful if integrated properly
+- **Status:** Real data, merged into the current training dataset
 
-**3. Trained Model**
+**3. Open-Meteo Temperature Data**
+- Source: `Datasets/download_zimbabwe_temperature_actual_1981.py`
+- Output: `Datasets/zimbabwe_temperature_monthly_actual_1981_2025.csv`
+- Content: actual Zimbabwe temperature series aggregated from multiple locations and averaged to annual temperature
+- Used by: `src/merge_temperature.py`
+- **Status:** Real data, currently used instead of synthetic temperature
+
+**4. Trained Model**
 - Source: `models/maize_yield_model.pkl`
 - Content: Serialized LinearRegression model
 - Used by: `app.py`, `src/predict.py`
@@ -39,7 +46,7 @@ The following FAOSTAT files were **deleted** to save disk space. These contained
 - `Value_shares_industry_primary_factors_E_All_Data_(Normalized).csv` - 32 MB (industry shares)
 
 **Reason for Deletion:** 
-These files contain **global data for all countries**, not Zimbabwe-specific information. Filtering for Zimbabwe records still left 7000+ rows of mixed indicators with mostly NaN values in yield columns. Our hybrid approach (real rainfall + synthetic agricultural variables) proved more practical.
+These files contain **global data for all countries**, not Zimbabwe-specific information. Filtering for Zimbabwe records still left 7000+ rows of mixed indicators with mostly NaN values in yield columns. The project started with a hybrid approach (real rainfall + synthetic agricultural variables), but the current pipeline now uses real agricultural indicators and actual temperature data where available.
 
 ### ⚠️ Kept (Reference Metadata)
 
@@ -75,10 +82,10 @@ These are kept for potential future extraction of Zimbabwe-specific agriculture 
 
 ```
 Input Features:
-├── Rainfall (mm)          [Real - NASA POWER]
-├── Temperature (°C)       [Estimated - normal distribution]
-├── Fertilizer (kg/ha)     [Estimated - trend + noise]
-└── Area (hectares)        [Estimated - trend + noise]
+├── Rainfall (mm)          [Real - NASA POWER / merged dataset]
+├── Temperature (°C)       [Real - Open-Meteo ERA5-Land]
+├── Fertilizer (kg/ha)     [Real - World Bank agriculture indicators]
+└── Area (hectares)        [Real - World Bank land under cereal production]
          ↓
    [LinearRegression Model]
          ↓
@@ -89,9 +96,9 @@ Output: Yield (kg/ha)
 
 | Category | Size | Status |
 |----------|------|--------|
-| Actual datasets used | ~150 KB | ✅ Essential |
+| Actual datasets used | ~1 MB | ✅ Essential |
 | Models | ~5 KB | ✅ Essential |
 | Deleted (FAOSTAT bloat) | ~12 GB | ❌ Removed |
 | Kept (reference) | ~4.7 MB | ⚠️ Optional |
-| **Total remaining** | **~4.9 MB** | **Clean** |
+| **Total remaining** | **~5+ MB** | **Clean** |
 

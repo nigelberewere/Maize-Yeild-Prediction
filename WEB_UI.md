@@ -24,7 +24,7 @@ Then open your browser to: **http://127.0.0.1:5000**
 
 📊 **Easy Input**
 - Annual Rainfall (mm) — Zimbabwe average: 694-850 mm
-- Average Temperature (°C) — Zimbabwe average: 20-24°C  
+- Average Temperature (°C) — actual Zimbabwe temperature series from Open-Meteo / ERA5-Land
 - Fertilizer Use (kg/ha) — Zimbabwe typical: 30-120 kg/ha
 - Area Harvested (hectares) — National average: 350k-420k ha
 
@@ -37,7 +37,8 @@ Then open your browser to: **http://127.0.0.1:5000**
 
 - **Backend:** Flask (Python)
 - **Frontend:** HTML5, Bootstrap 5, Vanilla JavaScript
-- **Model:** Linear Regression trained on Zimbabwe maize data
+- **Model:** Current model is trained on the merged real-data Zimbabwe maize dataset
+- **Data sources:** NASA POWER rainfall, World Bank agriculture indicators, Open-Meteo temperature
 - **API Endpoint:** POST `/predict` (JSON request/response)
 
 ## Example API Call

@@ -14,7 +14,7 @@ This repository contains a computational modelling mini project to predict maize
 - `data/`
   - `raw/` - Raw input datasets
   - `processed/` - Cleaned and processed datasets
-  - `zimbabwe_maize_yield.csv` - Sample synthetic dataset (46 records)
+  - `zimbabwe_maize_yield.csv` - Main training dataset (merged Zimbabwe agricultural data)
 - `notebooks/`
   - `maize_yield_analysis.ipynb` - Notebook for exploration and visualisation
 - `src/`
@@ -33,20 +33,19 @@ This repository contains a computational modelling mini project to predict maize
 - `WEB_UI.md` - Web interface documentation
 
 ## Datasets and sources
-Suggested real data sources for a full study:
-- FAOSTAT: maize yield, production, area harvested
-- World Bank: fertilizer consumption, agricultural land, cereal yield
-- NASA POWER: rainfall and temperature data
-- ZIMSTAT or Zimbabwe Ministry of Agriculture reports for local statistics
+Current data sources used in the project:
+- NASA POWER rainfall: used to generate the baseline rainfall series for Zimbabwe
+- World Bank agriculture indicators: fertilizer consumption, cereal yield, cereal production, and land under cereal production
+- Open-Meteo Historical Weather API (ERA5-Land): actual Zimbabwe temperature series aggregated from multiple reference points
 
-Note: The included `zimbabwe_maize_yield.csv` is synthetic sample data to bootstrap development. Replace with real data when available.
+The current training file is the merged dataset in `data/zimbabwe_maize_yield_realvars_temp.csv`, which combines real rainfall, real temperature, and available Zimbabwe agriculture indicators.
 
 ## Model workflow
 1. Data loading and cleaning (`src/data_preprocessing.py`).
 2. Exploratory data analysis (notebook).
-3. Train Linear Regression and Random Forest models (`src/train_model.py`).
-4. Evaluate models using RMSE, MAE, and R² (`src/evaluate_model.py`).
-5. Save best model and use `src/predict.py` for predictions.
+3. Train Linear Regression and Random Forest models (`src/train_model.py` or `src/train_with_file.py`).
+4. Compare hybrid versus real-data runs (`src/compare_models.py`).
+5. Save the best model and use `src/predict.py` for predictions.
 
 ## Algorithms used
 - Linear Regression (interpretable baseline)
@@ -130,6 +129,11 @@ jupyter notebook notebooks/maize_yield_analysis.ipynb
 ## Expected output
 - Trained model saved to `models/maize_yield_model.pkl`.
 - Performance metrics printed to console and saved plots in `reports/graphs/`.
+
+## Current model notes
+- The current model is trained on the merged real-data pipeline, not the early synthetic bootstrap dataset.
+- Temperature now comes from the Open-Meteo historical weather export in `Datasets/download_zimbabwe_temperature_actual_1981.py`.
+- The latest model comparison report is saved in `reports/model_comparison.csv`.
 
 ## License
 MIT License
