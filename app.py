@@ -14,7 +14,12 @@ model = joblib.load(MODEL_PATH)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    data_sources = [
+        'Rainfall: NASA POWER / merged dataset',
+        'Temperature: Open-Meteo ERA5-Land',
+        'Agriculture: World Bank indicators',
+    ]
+    return render_template('index.html', data_sources=data_sources)
 
 
 @app.route('/predict', methods=['POST'])
