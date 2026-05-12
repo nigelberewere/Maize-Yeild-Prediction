@@ -61,29 +61,7 @@
             margin: 0;
         }
 
-        .provenance-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            padding: 0.55rem 0.9rem;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.14);
-            color: #fff;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: help;
-        }
-
-        .provenance-dot {
-            width: 0.55rem;
-            height: 0.55rem;
-            border-radius: 50%;
-            background: #b8f2b8;
-            box-shadow: 0 0 0 4px rgba(184, 242, 184, 0.16);
-            flex: 0 0 auto;
-        }
-        
+                
         .form-section {
             padding: 2rem;
         }
@@ -287,6 +265,12 @@
     <!-- Navbar -->
     <nav class="navbar navbar-dark">
         <div class="container-fluid">
+            <button class="btn btn-link text-white me-2" type="button" data-bs-toggle="modal" data-bs-target="#dataInfoModal" aria-label="Data sources">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14z"/>
+                  <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .875-.252 1.02-.598l.088-.416c.07-.33.224-.553.498-.553h.545v-.5c0-1.02-.19-1.548-1.02-1.548-.357 0-.538.176-.612.49l-.04.176.7-.087.082-.38-.45-.083c-.294-.07-.352-.176-.288-.469l.738-3.468c.194-.897-.105-1.319-.808-1.319-.545 0-.875.252-1.02.598l-.088.416c-.07.33-.224.553-.498.553H6.5v.5c0 1.02.19 1.548 1.02 1.548.357 0 .538-.176.612-.49l.04-.176z"/>
+                </svg>
+            </button>
             <span class="navbar-brand">🌾 Maize Yield Predictor</span>
             <small style="color: rgba(255, 255, 255, 0.7);">Zimbabwe Agricultural Model</small>
         </div>
@@ -299,10 +283,6 @@
             <div class="card-header-custom">
                 <h1>Maize Yield Prediction</h1>
                 <p>Estimate your maize harvest yield based on climate and agricultural inputs</p>
-                <div class="provenance-badge" data-bs-toggle="tooltip" data-bs-placement="bottom" title="{% for source in data_sources %}{{ source }}{% if not loop.last %}&#10;{% endif %}{% endfor %}">
-                    <span class="provenance-dot"></span>
-                    Data sources: actual temperature, rainfall, and agriculture indicators
-                </div>
             </div>
 
             <!-- Info Box -->
@@ -402,13 +382,14 @@
             <p>🌍 AI-Based Maize Yield Prediction Model for Zimbabwe Farmers</p>
             <p>
                 <a href="https://github.com/nigelberewere/Maize-Yeild-Prediction" target="_blank">📖 View on GitHub</a> | 
-                <a href="#" onclick="showInfo(); return false;">ℹ️ About This Model</a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#dataInfoModal">ℹ️ About This Model</a>
             </p>
             <p style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.7;">Built with Python ML, trained on Zimbabwe agricultural data</p>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% include 'data_info_modal.html' %}
     <script>
         const form = document.getElementById('predictionForm');
         const loading = document.getElementById('loading');
@@ -468,13 +449,6 @@
             }
         });
 
-        function showInfo() {
-            alert('Maize Yield Prediction Model\n\n' +
-                  'This model uses Linear Regression trained on historical Zimbabwe maize yield data, ' +
-                  'incorporating rainfall, temperature, fertilizer use, and harvested area as predictors.\n\n' +
-                  'Data sources: NASA POWER (rainfall), World Bank (fertilizer), FAOSTAT (production).\n\n' +
-                  'Created as a computational modeling project for agricultural forecasting in Zimbabwe.');
-        }
     </script>
 </body>
 </html>

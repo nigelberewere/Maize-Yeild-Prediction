@@ -14,12 +14,22 @@ model = joblib.load(MODEL_PATH)
 
 @app.route('/')
 def index():
+    # Try to load the detailed dataset notes from DATASETS.md
+    datasets_md = os.path.join(PROJECT_ROOT, 'DATASETS.md')
+    data_info_text = ''
+    if os.path.exists(datasets_md):
+        try:
+            with open(datasets_md, 'r', encoding='utf-8') as f:
+                data_info_text = f.read()
+        except Exception:
+            data_info_text = ''
+
     data_sources = [
-        'Rainfall: NASA POWER / merged dataset',
-        'Temperature: Open-Meteo ERA5-Land',
-        'Agriculture: World Bank indicators',
+        'Rainfall: Open-Meteo (country average) / NASA POWER (legacy)',
+        'Temperature: Open-Meteo ERA5-Land (multiple locations average)',
+        'Agriculture: World Bank indicators (fertilizer, cereal yield, area)'
     ]
-    return render_template('index.html', data_sources=data_sources)
+    return render_template('index.html', data_sources=data_sources, data_info_text=data_info_text)
 
 
 @app.route('/predict', methods=['POST'])
