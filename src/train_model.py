@@ -13,7 +13,7 @@ import seaborn as sns
 
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LinearRegression, RidgeCV
+from sklearn.linear_model import LinearRegression, RidgeCV, LassoCV
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import KFold, TimeSeriesSplit
 from sklearn.pipeline import Pipeline
@@ -21,8 +21,18 @@ from sklearn.base import clone
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
 
-FEATURES = ['Rainfall_mm', 'Average_Temperature_C', 'Fertilizer_kg_per_ha', 'Area_Harvested_Ha']
+FEATURES = [
+    'Rainfall_mm',
+    'Average_Temperature_C',
+    'Fertilizer_kg_per_ha',
+    'ENSO_Index',  # El Niño/La Niña index (positive=drought risk)
+    'Soil_Clay_Percent',  # Soil texture (affects water retention)
+    'Soil_pH',  # Soil acidity (affects nutrient availability)
+    'Soil_Organic_Carbon_Percent',  # Soil organic matter
+]
 TARGET = 'Yield_kg_per_ha'
+# Chronological split: training years < TEMPORAL_SPLIT_YEAR, test years >= TEMPORAL_SPLIT_YEAR
+TEMPORAL_SPLIT_YEAR = 2016
 
 
 def load_data(path):
@@ -56,46 +66,49 @@ def clean_training_data(df, target=TARGET, features=FEATURES):
 
 
 def build_model_candidates():
-    """Create conservative candidates suited to a small tabular dataset."""
+    """Create conservative candidates suited to a small tabular dataset (n~44 years).
+    
+    For datasets this small, simpler regularized models significantly outperform
+    complex ensemble methods which tend to memorize noise. We prioritize:
+    1. LinearRegression (baseline)
+    2. RidgeCV (L2 regularization, automatic alpha selection)
+    3. LassoCV (L1 regularization, feature selection)
+    
+    Tree-based models (RandomForest, ExtraTrees, GradientBoosting) are included
+    for comparison but should not be considered primary for this data size.
+    """
     linear_steps = [
         ('imputer', SimpleImputer(strategy='median')),
         ('scaler', StandardScaler()),
     ]
 
     return {
+        # PRIMARY MODELS: Simple, regularized linear regression
         'LinearRegression': Pipeline(linear_steps + [('model', LinearRegression())]),
+        'RidgeCV': Pipeline(linear_steps + [
+            ('model', RidgeCV(alphas=np.logspace(-3, 4, 20), cv=3)),
+        ]),
+        'LassoCV': Pipeline(linear_steps + [
+            ('model', LassoCV(alphas=np.logspace(-3, 2, 20), cv=3, random_state=42)),
+        ]),
+        
+        # SECONDARY: Polynomial features + Ridge (for potential non-linearity)
         'RidgePolynomial': Pipeline([
             ('imputer', SimpleImputer(strategy='median')),
             ('poly', PolynomialFeatures(degree=2, include_bias=False)),
             ('scaler', StandardScaler()),
-            ('model', RidgeCV(alphas=np.logspace(-3, 4, 20))),
+            ('model', RidgeCV(alphas=np.logspace(-3, 4, 20), cv=3)),
         ]),
-        'RandomForest': Pipeline([
+        
+        # TREE MODELS: Included for comparison, but NOT recommended for this data size
+        # (Risk of overfitting on n~44 points)
+        'RandomForest_Restricted': Pipeline([
             ('imputer', SimpleImputer(strategy='median')),
             ('model', RandomForestRegressor(
-                n_estimators=500,
-                max_depth=5,
-                min_samples_leaf=2,
-                random_state=42,
-            )),
-        ]),
-        'ExtraTrees': Pipeline([
-            ('imputer', SimpleImputer(strategy='median')),
-            ('model', ExtraTreesRegressor(
-                n_estimators=500,
-                max_depth=5,
-                min_samples_leaf=2,
-                random_state=42,
-            )),
-        ]),
-        'GradientBoosting': Pipeline([
-            ('imputer', SimpleImputer(strategy='median')),
-            ('model', GradientBoostingRegressor(
-                n_estimators=250,
-                learning_rate=0.03,
-                max_depth=2,
-                min_samples_leaf=2,
-                subsample=0.85,
+                n_estimators=50,          # Reduced from 500
+                max_depth=2,              # Very shallow to prevent overfitting
+                min_samples_leaf=5,       # Increased from 2 to reduce noise
+                min_samples_split=8,      # Added constraint
                 random_state=42,
             )),
         ]),
@@ -107,13 +120,6 @@ def _regression_metrics(y_true, preds):
     mae = mean_absolute_error(y_true, preds)
     r2 = r2_score(y_true, preds)
     return {'rmse': float(rmse), 'mae': float(mae), 'r2': float(r2)}
-
-
-def _make_cv(n_rows, chronological):
-    if chronological and n_rows >= 20:
-        return TimeSeriesSplit(n_splits=5)
-    splits = min(5, max(2, n_rows // 5))
-    return KFold(n_splits=splits, shuffle=True, random_state=42)
 
 
 def _cross_validate_model(model, X, y, cv):
@@ -129,30 +135,50 @@ def _cross_validate_model(model, X, y, cv):
 
 
 def train_models(df, target=TARGET):
+    """Train models using strict chronological splitting.
+    
+    Data is split chronologically: years < TEMPORAL_SPLIT_YEAR are used for
+    training (with cross-validation), and years >= TEMPORAL_SPLIT_YEAR are used
+    for holdout evaluation. This prevents data leakage inherent in random splits.
+    """
     df = clean_training_data(df, target=target)
-    X = df[FEATURES]
-    y = df[target]
-
-    chronological = 'Year' in df.columns
-    cv = _make_cv(len(df), chronological=chronological)
-    holdout_size = max(3, int(round(len(df) * 0.2)))
-    train_end = len(df) - holdout_size
-    X_train, X_test = X.iloc[:train_end], X.iloc[train_end:]
-    y_train, y_test = y.iloc[:train_end], y.iloc[train_end:]
-
+    
+    # Enforce chronological split: train on past, test on future
+    if 'Year' in df.columns:
+        df['Year'] = pd.to_numeric(df['Year'], errors='coerce')
+        train_mask = df['Year'] < TEMPORAL_SPLIT_YEAR
+        test_mask = df['Year'] >= TEMPORAL_SPLIT_YEAR
+        
+        if not train_mask.any():
+            raise ValueError(f"No training data available before year {TEMPORAL_SPLIT_YEAR}")
+        if not test_mask.any():
+            raise ValueError(f"No test data available from year {TEMPORAL_SPLIT_YEAR} onward")
+        
+        X_train, X_test = df.loc[train_mask, FEATURES], df.loc[test_mask, FEATURES]
+        y_train, y_test = df.loc[train_mask, target], df.loc[test_mask, target]
+    else:
+        # Fallback: temporal split by position if Year column missing
+        holdout_size = max(3, int(round(len(df) * 0.2)))
+        train_end = len(df) - holdout_size
+        X_train, X_test = df.iloc[:train_end][FEATURES], df.iloc[train_end:][FEATURES]
+        y_train, y_test = df.iloc[:train_end][target], df.iloc[train_end:][target]
+    
+    # Use TimeSeriesSplit for cross-validation on training data
+    cv = TimeSeriesSplit(n_splits=5)
+    
     candidates = build_model_candidates()
     models = {}
     results = {}
 
     for name, model in candidates.items():
-        cv_metrics = _cross_validate_model(model, X, y, cv)
+        cv_metrics = _cross_validate_model(model, X_train, y_train, cv)
 
         model.fit(X_train, y_train)
         holdout_preds = model.predict(X_test)
         holdout_metrics = _regression_metrics(y_test, holdout_preds)
 
         final_model = build_model_candidates()[name]
-        final_model.fit(X, y)
+        final_model.fit(df[FEATURES], df[target])
         models[name] = final_model
         results[name] = {
             'rmse': holdout_metrics['rmse'],
